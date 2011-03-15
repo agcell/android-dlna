@@ -18,7 +18,7 @@ public class SSDPSocket {
 
         mSSDPMulticastGroup = new InetSocketAddress(SSDP.ADDRESS, SSDP.PORT);
         mSSDPSocket = new MulticastSocket(new InetSocketAddress(localInAddress,
-                0));
+                SSDP.PORT));
 
         NetworkInterface netIf = NetworkInterface
                 .getByInetAddress(localInAddress);
@@ -44,7 +44,7 @@ public class SSDPSocket {
     }
 
     public void close() {
-        if (mSSDPSocket != null) {
+        if (mSSDPSocket != null) {            
             mSSDPSocket.close();
         }
     }

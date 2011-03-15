@@ -4,7 +4,7 @@ import static org.ray.upnp.ssdp.SSDP.NEWLINE;
 
 public class SSDPSearchMsg {
     static final String HOST = "Host:" + SSDP.ADDRESS + ":" + SSDP.PORT;
-    static final String MAN = "Man:ssdp:discover";
+    static final String MAN = "Man:\"ssdp:discover\"";
     
     int mMX = 3;    /* seconds to delay response */
     String mST;     /* Search target */
