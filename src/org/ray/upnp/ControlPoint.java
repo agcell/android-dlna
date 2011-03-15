@@ -1,11 +1,10 @@
 package org.ray.upnp;
 
+import java.io.BufferedInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.DatagramPacket;
-import java.util.ArrayList;
-import java.util.Scanner;
-import java.util.Set;
-import java.util.TreeSet;
+import java.net.URL;
 
 import org.ray.upnp.ssdp.SSDP;
 import org.ray.upnp.ssdp.SSDPNotifyMsg;
@@ -16,9 +15,6 @@ import org.ray.upnp.ssdp.SSDPSocket;
 public class ControlPoint {
     
     SSDPSocket mSSDPSocket;
-
-    /* To store urls from SSDP notify or response */
-    Set<String> mURLs = new TreeSet<String>();
 
     Runnable mRespNotifyHandler = new Runnable() {
         @Override
@@ -104,8 +100,19 @@ public class ControlPoint {
         }
     }
 
-    public void getDeviceDescription(String url) {
-
+    public String getDeviceDescription(String strURL) throws IOException {
+    	URL url = new URL(strURL);
+    	InputStream is = url.openStream();
+    	BufferedInputStream bis = new BufferedInputStream(is);
+    	
+    	byte[] buf = new byte[2048];
+    	while (bis.read(buf) != -1) {
+    		; // Do nothing
+    	}
+    	
+    	String description = new String(buf);
+    	System.out.println(description);
+    	return description;
     }
     
     /* For test purpose */

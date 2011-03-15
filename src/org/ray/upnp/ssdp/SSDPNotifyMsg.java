@@ -1,14 +1,11 @@
 package org.ray.upnp.ssdp;
 
 import java.net.DatagramPacket;
-import java.util.Scanner;
-
-import javax.xml.crypto.Data;
 
 public class SSDPNotifyMsg {
     public static boolean isSSDPNotifyMsg(DatagramPacket dp) {
         String startLine = SSDP.parseStartLine(dp);
-        if (startLine.equals(SSDP.SL_NOTIFY)) {
+        if (SSDP.SL_NOTIFY.equals(startLine)) {
             return true;
         }
         
@@ -17,7 +14,7 @@ public class SSDPNotifyMsg {
     
     public static boolean isAlive(DatagramPacket dp) {
         String NTSValue = SSDP.parseHeaderValue(dp, SSDP.NTS);
-        if (NTSValue.equals(SSDP.NTS_ALIVE)) {
+        if (SSDP.NTS_ALIVE.equals(NTSValue)) {
             return true;
         }
         
@@ -26,7 +23,7 @@ public class SSDPNotifyMsg {
     
     public static boolean isByeByte(DatagramPacket dp) {
         String NTSValue = SSDP.parseHeaderValue(dp, SSDP.NTS);
-        if (NTSValue.equals(SSDP.NTS_BYEBYE)) {
+        if (SSDP.NTS_BYEBYE.equals(NTSValue)) {
             return true;
         }
         
@@ -35,7 +32,7 @@ public class SSDPNotifyMsg {
     
     public static boolean isUpdate(DatagramPacket dp) {
         String NTSValue = SSDP.parseHeaderValue(dp, SSDP.NTS);
-        if (NTSValue.equals(SSDP.NTS_UPDATE)) {
+        if (SSDP.NTS_UPDATE.equals(NTSValue)) {
             return true;
         }
         
@@ -44,7 +41,7 @@ public class SSDPNotifyMsg {
     
     public static boolean isContentDirectory(DatagramPacket dp) {
         String NTValue = SSDP.parseHeaderValue(dp, SSDP.NT);
-        if (NTValue.equals(SSDP.NT_ContentDirectory)) {
+        if (SSDP.NT_ContentDirectory.equals(NTValue)) {
             return true;
         }
         

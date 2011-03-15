@@ -8,7 +8,7 @@ public class SSDPRespMsg {
         String content = new String(dp.getData());
         Scanner s = new Scanner(content);
         String startLine = s.nextLine();
-        if (startLine.equals(SSDP.SL_OK)) {
+        if (SSDP.SL_OK.equals(startLine)) {
             return true;
         }
         
