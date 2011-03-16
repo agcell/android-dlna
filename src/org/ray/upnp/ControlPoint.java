@@ -14,9 +14,9 @@ import org.ray.upnp.ssdp.SSDPSocket;
 
 public class ControlPoint {
     
-    SSDPSocket mSSDPSocket;
+    private SSDPSocket mSSDPSocket;
 
-    Runnable mRespNotifyHandler = new Runnable() {
+    private Runnable mRespNotifyHandler = new Runnable() {
         @Override
         public void run() {
             while (true) {
@@ -76,7 +76,7 @@ public class ControlPoint {
         search(SSDP.ST_ContentDirectory);
     }
     
-    ControlPointListener mListener = null;
+    private ControlPointListener mListener = null;
     
     public void registerListener(ControlPointListener listener) {
         mListener = listener;
@@ -88,32 +88,57 @@ public class ControlPoint {
     
     private void notifyDeviceAdded(String url) {
         System.out.println("Device add: " + url);
-        if (mListener != null) {
-            mListener.onDeviceAdded(url);
-        }
+        mDeviceAddUrl = url;
+        
+        // Create a new thread to do some network operations
+        new Thread(mGetDeviceTask, url).start();
     }
     
     private void notifyDeviceRemoved(String url) {
         System.out.println("Device remove: " + url);
-        if (mListener != null) {
-            mListener.onDeviceRemoved(url);
+    }
+    
+    private String mDeviceAddUrl;
+    Runnable mGetDeviceTask = new Runnable() {
+        public void run() {
+            Device deviceAdd = Device.createInstanceFromXML(mDeviceAddUrl);
+            
+            if ((deviceAdd != null) && (mListener != null)) {
+                mListener.onDeviceAdd(deviceAdd);
+            }
         }
-    }
+    };
 
-    public String getDeviceDescription(String strURL) throws IOException {
-    	URL url = new URL(strURL);
-    	InputStream is = url.openStream();
-    	BufferedInputStream bis = new BufferedInputStream(is);
-    	
-    	byte[] buf = new byte[2048];
-    	while (bis.read(buf) != -1) {
-    		; // Do nothing
-    	}
-    	
-    	String description = new String(buf);
-    	System.out.println(description);
-    	return description;
-    }
+//    static String getDeviceDescription(String strURL) {
+//    	URL url;
+//    	InputStream is = null;
+//    	String description = null;
+//        try {            
+//            url = new URL(strURL);
+//            is = url.openStream(); // Maybe time-consuming
+//            BufferedInputStream bis = new BufferedInputStream(is);
+//            
+//            int len = 1024 * 16;
+//            byte[] buf = new byte[len];
+//            while (bis.read(buf, 0, len) != -1) {
+//                ; // Do nothing
+//            }
+//            
+//            description = new String(buf);
+//            System.out.println(description);
+//        } catch (IOException e) {
+//            e.printStackTrace();
+//        } finally {
+//            if (is != null) {
+//                try {
+//                    is.close();
+//                } catch (IOException e) {
+//                }
+//            }
+//        }
+//        
+//        return description;
+//    }
     
     /* For test purpose */
     public static void main(String[] args) {
@@ -124,5 +149,6 @@ public class ControlPoint {
             // TODO Auto-generated catch block
             e.printStackTrace();
         }
+
     }
 }

@@ -1,6 +1,6 @@
 package org.ray.upnp;
 
 public interface ControlPointListener {
-    void onDeviceAdded(String url);
-    void onDeviceRemoved(String url);
+    void onDeviceAdd(Device device);
+    void onDeviceRemove(Device device);
 }
