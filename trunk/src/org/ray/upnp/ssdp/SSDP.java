@@ -9,6 +9,11 @@ public class SSDP {
     
     public static final String ADDRESS = "239.255.255.250";
     public static final int PORT = 1900;
+    
+    public static final String ST = "ST";
+    public static final String LOCATION = "LOCATION";
+    public static final String NT = "NT";
+    public static final String NTS = "NTS";
 
     /* Definitions of start line */
     public static final String SL_NOTIFY = "NOTIFY * HTTP/1.1";
@@ -27,9 +32,7 @@ public class SSDP {
     /* Definitions of notification type */
     public static final String NT_ContentDirectory = "urn:schemas-upnp-org:service:ContentDirectory:1";
     
-    public static final String LOCATION = "LOCATION";
-    public static final String NT = "NT";
-    public static final String NTS = "NTS";
+    
     
     public static String parseHeaderValue(String content, String headerName) {
         Scanner s = new Scanner(content);
@@ -39,7 +42,7 @@ public class SSDP {
             String line = s.nextLine();
             int index = line.indexOf(':');
             String header = line.substring(0, index);
-            if (headerName.equals(header.trim().toUpperCase())) {
+            if (headerName.equalsIgnoreCase(header.trim())) {
                 return line.substring(index + 1).trim();
             }
         }
