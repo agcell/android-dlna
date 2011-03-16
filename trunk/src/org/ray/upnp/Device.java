@@ -6,49 +6,60 @@ import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.parsers.SAXParser;
 import javax.xml.parsers.SAXParserFactory;
 
-import org.xml.sax.Attributes;
 import org.xml.sax.SAXException;
 import org.xml.sax.helpers.DefaultHandler;
 
 
 public class Device {
     static final String DEVICE_TYPE = "deviceType";
-    static final String PRESENTATION_URL = "presentationURL";
     static final String FRIENDLY_NAME = "friendlyName";
+    static final String MANUFACTURER = "manufacturer";
+    static final String MANUFACTURER_URL = "manufacturerURL";
+    static final String MODEL_DESCRIPTION = "modelDescription";
+    static final String MODEL_NAME = "modelName";
+    static final String MODEL_NUMBER = "modelNumber";
+    static final String MODEL_URL = "modelURL";
+    static final String SERIAL_NUMBER = "serialNumber";
+    static final String UDN = "UDN";
     
     String mDeviceType;         /* Required */
     String mFriendlyName;       /* Required */
     String mManufactorer;       /* Required */
-    String mManufactorerURL;    /* Optional */
-    String mModelDescription;   /* Recommended */
+//    String mManufactorerURL;    /* Optional */
+//    String mModelDescription;   /* Recommended */
     String mModelName;          /* Required */
-    String mModelNumber;        /* Recommended */
-    String mModelURL;           /* Optional */
-    String mSerialNumber;       /* Recommended */
+//    String mModelNumber;        /* Recommended */
+//    String mModelURL;           /* Optional */
+//    String mSerialNumber;       /* Recommended */
     String mUDN;                /* Required */
-    String mUPC;                /* Optional */
+//    String mUPC;                /* Optional */
     
     public static Device createInstanceFromXML(String url) {
-        Device device = new Device();
+        final Device device = new Device();
         
         DefaultHandler dh = new DefaultHandler() {
-            String currentElement = null;
-            
-            @Override
-            public void startElement(String uri, String localName,
-                    String qName, Attributes attributes) throws SAXException {
-                System.out.println(qName);
-                
-                currentElement = qName;
-            }
+            String currentValue = null;
             
             @Override
             public void characters(char[] ch, int start, int length)
                     throws SAXException {
-                if (FRIENDLY_NAME.equals(currentElement)) {
-                    String value = new String(ch, start, length);
-                    System.out.println(value);
-                }
+                currentValue = new String(ch, start, length);
+            }
+            
+            @Override
+            public void endElement(String uri, String localName, String qName)
+                    throws SAXException {
+                if (DEVICE_TYPE.equals(qName)) {
+                    device.mDeviceType = currentValue;
+                } else if (FRIENDLY_NAME.equals(qName)) {
+                    device.mFriendlyName = currentValue;
+                } else if (MANUFACTURER.equals(qName)) {
+                    device.mManufactorer = currentValue;
+                } else if (MODEL_NAME.equals(qName)) {
+                    device.mModelName = currentValue;
+                } else if (UDN.equals(qName)) {
+                    device.mUDN = currentValue;
+                } 
             }
         };
         
@@ -58,7 +69,7 @@ public class Device {
         try {
             parser = factory.newSAXParser();
             parser.parse(url, dh);
-            
+
             return device;
         } catch (ParserConfigurationException e) {
             e.printStackTrace();
@@ -71,7 +82,8 @@ public class Device {
         return null;
     }
     
-    public static void main(String[] args) {
-        createInstanceFromXML("http://172.16.4.21:49152/description.xml");
+    @Override
+    public String toString() {
+        return mFriendlyName;
     }
 }
