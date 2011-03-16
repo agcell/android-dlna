@@ -11,6 +11,8 @@ import java.net.SocketAddress;
 public class SSDPSocket {
     SocketAddress mSSDPMulticastGroup;
     MulticastSocket mSSDPSocket;
+    
+    NetworkInterface mNetIf;
 
     public SSDPSocket() throws IOException {
         InetAddress localInAddress = InetAddress.getLocalHost();
@@ -20,9 +22,8 @@ public class SSDPSocket {
         mSSDPSocket = new MulticastSocket(new InetSocketAddress(localInAddress,
                 SSDP.PORT));
 
-        NetworkInterface netIf = NetworkInterface
-                .getByInetAddress(localInAddress);
-        mSSDPSocket.joinGroup(mSSDPMulticastGroup, netIf);
+        mNetIf = NetworkInterface.getByInetAddress(localInAddress);
+        mSSDPSocket.joinGroup(mSSDPMulticastGroup, mNetIf);
     }
 
     /* Used to send SSDP packet */
@@ -44,7 +45,12 @@ public class SSDPSocket {
     }
 
     public void close() {
-        if (mSSDPSocket != null) {            
+        if (mSSDPSocket != null) {
+            try {
+                mSSDPSocket.leaveGroup(mSSDPMulticastGroup, mNetIf);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
             mSSDPSocket.close();
         }
     }
