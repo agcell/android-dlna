@@ -6,6 +6,7 @@ import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.parsers.SAXParser;
 import javax.xml.parsers.SAXParserFactory;
 
+import org.ray.upnp.ssdp.SSDP;
 import org.xml.sax.SAXException;
 import org.xml.sax.helpers.DefaultHandler;
 
@@ -21,6 +22,7 @@ public class Device {
     static final String MODEL_URL = "modelURL";
     static final String SERIAL_NUMBER = "serialNumber";
     static final String UDN = "UDN";
+    static final String SERVICE_TYPE = "serviceType";
     
     String mDeviceType;         /* Required */
     String mFriendlyName;       /* Required */
@@ -33,6 +35,8 @@ public class Device {
 //    String mSerialNumber;       /* Recommended */
     String mUDN;                /* Required */
 //    String mUPC;                /* Optional */
+    
+    Service mContentDirectoryService;
     
     public static Device createInstanceFromXML(String url) {
         final Device device = new Device();
@@ -59,7 +63,9 @@ public class Device {
                     device.mModelName = currentValue;
                 } else if (UDN.equals(qName)) {
                     device.mUDN = currentValue;
-                } 
+                } else if (SERVICE_TYPE.equals(qName)) { /* Parse service */
+                    
+                }
             }
         };
         
