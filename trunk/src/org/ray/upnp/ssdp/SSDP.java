@@ -3,6 +3,8 @@ package org.ray.upnp.ssdp;
 import java.net.DatagramPacket;
 import java.util.Scanner;
 
+import org.ray.upnp.UPNP;
+
 public class SSDP {
     /* New line definition */
     public static final String NEWLINE = "\r\n";
@@ -21,8 +23,7 @@ public class SSDP {
     public static final String SL_OK = "HTTP/1.1 200 OK";
 
     /* Definitions of search targets */
-    public static final String ST_RootDevice = "ST:rootdevice";
-    public static final String ST_ContentDirectory = "ST:urn:schemas-upnp-org:service:ContentDirectory:1";
+    public static final String ST_ContentDirectory = ST + ":" + UPNP.SERVICE_ContentDirectory1;
     
     /* Definitions of notification sub type */
     public static final String NTS_ALIVE = "ssdp:alive";
@@ -30,9 +31,7 @@ public class SSDP {
     public static final String NTS_UPDATE = "ssdp:update";
     
     /* Definitions of notification type */
-    public static final String NT_ContentDirectory = "urn:schemas-upnp-org:service:ContentDirectory:1";
-    
-    
+    public static final String NT_ContentDirectory = UPNP.SERVICE_ContentDirectory1;
     
     public static String parseHeaderValue(String content, String headerName) {
         Scanner s = new Scanner(content);
