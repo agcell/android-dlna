@@ -3,9 +3,7 @@ package org.ray.upnp;
 import java.io.IOException;
 import java.net.DatagramPacket;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
-import java.util.Set;
 
 import org.ray.upnp.ssdp.SSDP;
 import org.ray.upnp.ssdp.SSDPNotifyMsg;
@@ -14,11 +12,11 @@ import org.ray.upnp.ssdp.SSDPSearchMsg;
 import org.ray.upnp.ssdp.SSDPSocket;
 
 public class ControlPoint {
-    
+
     private SSDPSocket mSSDPSocket;
-    
+
     private Map<String, Device> mCache = new HashMap<String, Device>();
-    
+
     private ControlPointListener mListener = null;
 
     public ControlPoint() throws IOException {
@@ -26,24 +24,35 @@ public class ControlPoint {
 
         new Thread(mRespNotifyHandler).start();
     }
-    
+
     public void search(String type) throws IOException {
         SSDPSearchMsg search = new SSDPSearchMsg(type);
-        mSSDPSocket.send(search.toString());
+
+        /* Send 3 times like WindowsMedia */
+        for (int i = 0; i < 3; i++) {
+            mSSDPSocket.send(search.toString());
+
+            try {
+                Thread.sleep(3000);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
     }
-    
+
     /* Default to search for service of ContentDirectory */
     public void search() throws IOException {
         search(SSDP.ST_ContentDirectory);
     }
-    
+
     public void registerListener(ControlPointListener listener) {
         mListener = listener;
     }
-    
+
     public void unregisterListener() {
         mListener = null;
     }
+
     private Runnable mRespNotifyHandler = new Runnable() {
         @Override
         public void run() {
@@ -61,77 +70,91 @@ public class ControlPoint {
             }
         }
     };
-        
+
     private void handleRespMsg(DatagramPacket dp) {
         String url = SSDP.parseHeaderValue(dp, SSDP.LOCATION);
-        notifyDeviceAdded(url);
+        notifyDeviceAdd(url);
     }
-    
+
     /* Listen to devices of interest, default to service of ContentDirectory */
-    private void handleNotifyMsg(DatagramPacket dp) {        
+    private void handleNotifyMsg(DatagramPacket dp) {
         if (SSDPNotifyMsg.isContentDirectory(dp)) {
             String url = SSDP.parseHeaderValue(dp, SSDP.LOCATION);
-            
+
             if (SSDPNotifyMsg.isAlive(dp)) {
-                notifyDeviceAdded(url);
+                notifyDeviceAdd(url);
             } else if (SSDPNotifyMsg.isByeByte(dp)) {
-                notifyDeviceRemoved(url);
+                notifyDeviceRemove(url);
             } else if (SSDPNotifyMsg.isUpdate(dp)) {
-                
+
             }
         }
     }
-    
-    private void notifyDeviceAdded(String url) {
-        /* Prevent from creating duplicated devices */
-        if (mCache.containsKey(url)) {
-            return;
+
+    private void notifyDeviceAdd(String url) {
+        synchronized (mCache) {
+            /* Prevent from creating duplicated devices */
+            if (mCache.containsKey(url)) {
+                return;
+            }
+            mCache.put(url, null);
+        }
+
+        new Thread(new GetDeviceTask(url), url).start();
+    }
+
+    private void notifyDeviceRemove(String url) {
+        synchronized (mCache) {
+            if (mCache.containsKey(url)) {
+                Device device = mCache.get(url);
+                System.out.println(device + " remove [" + url);
+                if (mListener != null) {
+                    mListener.onDeviceRemove(device);
+                }
+                
+                mCache.remove(url);
+                System.out.println(mCache);
+            }
+        }
+    }
+
+    private class GetDeviceTask implements Runnable {
+        String url;
+        
+        public GetDeviceTask(String url) {
+            this.url = url;
         }
         
-        mDeviceAddUrl = url;
-                
-        /* Create a new thread to do some network operations */
-        new Thread(mGetDeviceTask, url).start();
-    }
-    
-    private void notifyDeviceRemoved(String url) {
-        if (mCache.containsKey(url)) {
-            if (mListener != null) {
-                mListener.onDeviceRemove(mCache.get(url));
-            }
-            mCache.remove(url);
-        }
-    }
-    
-    private String mDeviceAddUrl;
-    private Runnable mGetDeviceTask = new Runnable() {
+        @Override
         public void run() {
-            Device deviceAdd = Device.createInstanceFromXML(mDeviceAddUrl);
-            
-            if (deviceAdd != null) {
-                System.out.println(deviceAdd);
-                mCache.put(mDeviceAddUrl, deviceAdd);
-                
+            Device device = Device.createInstanceFromXML(url);
+
+            if (device != null) {
+                System.out.println(device + " add [" + url + "]");
                 if (mListener != null) {
-                    mListener.onDeviceAdd(deviceAdd);
+                    mListener.onDeviceAdd(device);
+                }
+                synchronized (mCache) {
+                    mCache.put(url, device);
+                    System.out.println(mCache);
                 }
             }
         }
-    };
-    
+    }
+
     /* For test purpose */
     public static void main(String[] args) {
         try {
             ControlPointListener listener = new ControlPointListener() {
-                
+
                 @Override
                 public void onDeviceRemove(Device device) {
-                    System.out.println(device + " remove");
+//                    System.out.println("Listener device remove");
                 }
-                
+
                 @Override
                 public void onDeviceAdd(Device device) {
-                    System.out.println(device + " add");
+//                    System.out.println("Listener device add");
                 }
             };
             ControlPoint cp = new ControlPoint();
@@ -141,7 +164,7 @@ public class ControlPoint {
             e.printStackTrace();
         }
     }
-    
+
     /* For test purpose */
     private void print(DatagramPacket dp) {
         System.out.println(new String(dp.getData()));
