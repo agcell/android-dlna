@@ -1,10 +1,11 @@
 package org.ray.upnp;
 
-import java.io.BufferedInputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.net.DatagramPacket;
-import java.net.URL;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
 
 import org.ray.upnp.ssdp.SSDP;
 import org.ray.upnp.ssdp.SSDPNotifyMsg;
@@ -15,7 +16,34 @@ import org.ray.upnp.ssdp.SSDPSocket;
 public class ControlPoint {
     
     private SSDPSocket mSSDPSocket;
+    
+    private Map<String, Device> mCache = new HashMap<String, Device>();
+    
+    private ControlPointListener mListener = null;
 
+    public ControlPoint() throws IOException {
+        mSSDPSocket = new SSDPSocket();
+
+        new Thread(mRespNotifyHandler).start();
+    }
+    
+    public void search(String type) throws IOException {
+        SSDPSearchMsg search = new SSDPSearchMsg(type);
+        mSSDPSocket.send(search.toString());
+    }
+    
+    /* Default to search for service of ContentDirectory */
+    public void search() throws IOException {
+        search(SSDP.ST_ContentDirectory);
+    }
+    
+    public void registerListener(ControlPointListener listener) {
+        mListener = listener;
+    }
+    
+    public void unregisterListener() {
+        mListener = null;
+    }
     private Runnable mRespNotifyHandler = new Runnable() {
         @Override
         public void run() {
@@ -33,13 +61,7 @@ public class ControlPoint {
             }
         }
     };
-    
-    public ControlPoint() throws IOException {
-        mSSDPSocket = new SSDPSocket();
-
-        new Thread(mRespNotifyHandler).start();
-    }
-    
+        
     private void handleRespMsg(DatagramPacket dp) {
         String url = SSDP.parseHeaderValue(dp, SSDP.LOCATION);
         notifyDeviceAdded(url);
@@ -60,95 +82,68 @@ public class ControlPoint {
         }
     }
     
-    /* For test purpose */
-    void print(DatagramPacket dp) {
-        System.out.println(new String(dp.getData()));
-    }  
-
-
-    public void search(String type) throws IOException {
-        SSDPSearchMsg search = new SSDPSearchMsg(type);
-        mSSDPSocket.send(search.toString());
-    }
-    
-    /* Default to search for service of ContentDirectory */
-    public void search() throws IOException {
-        search(SSDP.ST_ContentDirectory);
-    }
-    
-    private ControlPointListener mListener = null;
-    
-    public void registerListener(ControlPointListener listener) {
-        mListener = listener;
-    }
-    
-    public void unregisterListener() {
-        mListener = null;
-    }
-    
     private void notifyDeviceAdded(String url) {
-        System.out.println("Device add: " + url);
-        mDeviceAddUrl = url;
+        /* Prevent from creating duplicated devices */
+        if (mCache.containsKey(url)) {
+            return;
+        }
         
-        // Create a new thread to do some network operations
+        mDeviceAddUrl = url;
+                
+        /* Create a new thread to do some network operations */
         new Thread(mGetDeviceTask, url).start();
     }
     
     private void notifyDeviceRemoved(String url) {
-        System.out.println("Device remove: " + url);
+        if (mCache.containsKey(url)) {
+            if (mListener != null) {
+                mListener.onDeviceRemove(mCache.get(url));
+            }
+            mCache.remove(url);
+        }
     }
     
     private String mDeviceAddUrl;
-    Runnable mGetDeviceTask = new Runnable() {
+    private Runnable mGetDeviceTask = new Runnable() {
         public void run() {
             Device deviceAdd = Device.createInstanceFromXML(mDeviceAddUrl);
             
-            if ((deviceAdd != null) && (mListener != null)) {
-                mListener.onDeviceAdd(deviceAdd);
+            if (deviceAdd != null) {
+                System.out.println(deviceAdd);
+                mCache.put(mDeviceAddUrl, deviceAdd);
+                
+                if (mListener != null) {
+                    mListener.onDeviceAdd(deviceAdd);
+                }
             }
         }
     };
-
-//    static String getDeviceDescription(String strURL) {
-//    	URL url;
-//    	InputStream is = null;
-//    	String description = null;
-//        try {            
-//            url = new URL(strURL);
-//            is = url.openStream(); // Maybe time-consuming
-//            BufferedInputStream bis = new BufferedInputStream(is);
-//            
-//            int len = 1024 * 16;
-//            byte[] buf = new byte[len];
-//            while (bis.read(buf, 0, len) != -1) {
-//                ; // Do nothing
-//            }
-//            
-//            description = new String(buf);
-//            System.out.println(description);
-//        } catch (IOException e) {
-//            e.printStackTrace();
-//        } finally {
-//            if (is != null) {
-//                try {
-//                    is.close();
-//                } catch (IOException e) {
-//                }
-//            }
-//        }
-//        
-//        return description;
-//    }
     
     /* For test purpose */
     public static void main(String[] args) {
         try {
+            ControlPointListener listener = new ControlPointListener() {
+                
+                @Override
+                public void onDeviceRemove(Device device) {
+                    System.out.println(device + " remove");
+                }
+                
+                @Override
+                public void onDeviceAdd(Device device) {
+                    System.out.println(device + " add");
+                }
+            };
             ControlPoint cp = new ControlPoint();
+            cp.registerListener(listener);
             cp.search();
         } catch (IOException e) {
-            // TODO Auto-generated catch block
             e.printStackTrace();
         }
-
+    }
+    
+    /* For test purpose */
+    private void print(DatagramPacket dp) {
+        System.out.println(new String(dp.getData()));
     }
 }
