@@ -25,6 +25,11 @@ public class ControlPoint {
         new Thread(mRespNotifyHandler).start();
     }
 
+    /**
+     * Search for devices of interest.
+     * @param type
+     * @throws IOException
+     */
     public void search(String type) throws IOException {
         SSDPSearchMsg search = new SSDPSearchMsg(type);
 
@@ -35,22 +40,31 @@ public class ControlPoint {
             try {
                 Thread.sleep(3000);
             } catch (InterruptedException e) {
-                e.printStackTrace();
+                // Ignore this exception
             }
         }
     }
 
-    /* Default to search for service of ContentDirectory */
+    /** Default to search for service of ContentDirectory. */
     public void search() throws IOException {
         search(SSDP.ST_ContentDirectory);
     }
 
+    /** Register as a ControlPoint listener */
     public void registerListener(ControlPointListener listener) {
         mListener = listener;
     }
 
+    /** Unregister the listener */
     public void unregisterListener() {
         mListener = null;
+    }
+    
+    /** Stop running of control point and clean some resources */
+    public void close() {
+        if (mSSDPSocket != null) {
+            mSSDPSocket.close();
+        }
     }
 
     private Runnable mRespNotifyHandler = new Runnable() {
@@ -92,14 +106,6 @@ public class ControlPoint {
     }
 
     private void notifyDeviceAdd(String url) {
-        synchronized (mCache) {
-            /* Prevent from creating duplicated devices */
-            if (mCache.containsKey(url)) {
-                return;
-            }
-            mCache.put(url, null);
-        }
-
         new Thread(new GetDeviceTask(url), url).start();
     }
 
@@ -107,7 +113,7 @@ public class ControlPoint {
         synchronized (mCache) {
             if (mCache.containsKey(url)) {
                 Device device = mCache.get(url);
-                System.out.println(device + " remove [" + url);
+                System.out.println("Remove " + device + "[" + url + "]");
                 if (mListener != null) {
                     mListener.onDeviceRemove(device);
                 }
@@ -127,15 +133,18 @@ public class ControlPoint {
         
         @Override
         public void run() {
-            Device device = Device.createInstanceFromXML(url);
-
-            if (device != null) {
-                System.out.println(device + " add [" + url + "]");
-                if (mListener != null) {
-                    mListener.onDeviceAdd(device);
+            synchronized (mCache) {
+                if (mCache.containsKey(url)) {
+                    return;
                 }
-                synchronized (mCache) {
+                
+                Device device = Device.createInstanceFromXML(url);
+                if (device != null) {
+                    System.out.println("Add " + device + "[" + url + "]");
                     mCache.put(url, device);
+                    if (mListener != null) {
+                        mListener.onDeviceAdd(device);
+                    }
                     System.out.println(mCache);
                 }
             }
