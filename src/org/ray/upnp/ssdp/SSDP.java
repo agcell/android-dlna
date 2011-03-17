@@ -23,7 +23,7 @@ public class SSDP {
     public static final String SL_OK = "HTTP/1.1 200 OK";
 
     /* Definitions of search targets */
-    public static final String ST_ContentDirectory = ST + ":" + UPNP.SERVICE_ContentDirectory1;
+    public static final String ST_ContentDirectory = ST + ":" + UPNP.SERVICE_CONTENT_DIRECTORY_1;
     
     /* Definitions of notification sub type */
     public static final String NTS_ALIVE = "ssdp:alive";
@@ -31,7 +31,7 @@ public class SSDP {
     public static final String NTS_UPDATE = "ssdp:update";
     
     /* Definitions of notification type */
-    public static final String NT_ContentDirectory = UPNP.SERVICE_ContentDirectory1;
+    public static final String NT_CONTENT_DIRECTORY = UPNP.SERVICE_CONTENT_DIRECTORY_1;
     
     public static String parseHeaderValue(String content, String headerName) {
         Scanner s = new Scanner(content);
