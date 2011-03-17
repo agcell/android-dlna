@@ -41,7 +41,7 @@ public class SSDPNotifyMsg {
     
     public static boolean isContentDirectory(DatagramPacket dp) {
         String NTValue = SSDP.parseHeaderValue(dp, SSDP.NT);
-        if (SSDP.NT_ContentDirectory.equals(NTValue)) {
+        if (SSDP.NT_CONTENT_DIRECTORY.equals(NTValue)) {
             return true;
         }
         
