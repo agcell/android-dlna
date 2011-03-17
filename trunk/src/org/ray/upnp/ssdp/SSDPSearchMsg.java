@@ -1,7 +1,5 @@
 package org.ray.upnp.ssdp;
 
-import static org.ray.upnp.ssdp.SSDP.NEWLINE;
-
 public class SSDPSearchMsg {
     static final String HOST = "Host:" + SSDP.ADDRESS + ":" + SSDP.PORT;
     static final String MAN = "Man:\"ssdp:discover\"";
@@ -33,12 +31,12 @@ public class SSDPSearchMsg {
     public String toString() {
         StringBuilder content = new StringBuilder();
         
-        content.append(SSDP.SL_MSEARCH).append(NEWLINE);
-        content.append(HOST).append(NEWLINE);
-        content.append(MAN).append(NEWLINE);
-        content.append(mST).append(NEWLINE);
-        content.append("MX:" + mMX).append(NEWLINE);
-        content.append(NEWLINE);
+        content.append(SSDP.SL_MSEARCH).append(SSDP.NEWLINE);
+        content.append(HOST).append(SSDP.NEWLINE);
+        content.append(MAN).append(SSDP.NEWLINE);
+        content.append(mST).append(SSDP.NEWLINE);
+        content.append("MX:" + mMX).append(SSDP.NEWLINE);
+        content.append(SSDP.NEWLINE);
         
         return content.toString();
     }
