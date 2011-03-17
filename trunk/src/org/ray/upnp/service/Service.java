@@ -2,6 +2,8 @@ package org.ray.upnp.service;
 
 import java.util.List;
 
+import org.ray.upnp.parser.Parser;
+
 public class Service {
     public static final String TAG = "service";
     public static final String TAG_SERVICE_TYPE = "serviceType";
@@ -21,14 +23,14 @@ public class Service {
     /* Relative. Relative URL for eventing. */
     public String eventSubURL;
 
-    List<Action> mActionList;
-    List<StateVariable> mServiceStateTable;
+    public List<Action> actionList;
+    public List<StateVariable> serviceStateTable;
 
     /*
      * We don't get SCPD, control and eventSub descriptions at service creation.
      * So call this method first before you use the service.
      */
     public void init() {
-
+        Parser parser = Parser.getInstance();
     }
 }
