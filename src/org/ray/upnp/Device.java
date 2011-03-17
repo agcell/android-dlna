@@ -24,7 +24,6 @@ public class Device {
     public static final String TAG_UPC = "UPC";
     public static final String TAG_ICON_LIST = "iconList";
     public static final String TAG_SERVICE_LIST = "serviceList";
-    protected static final String Device = null;
 
     /* Required. UPnP device type. */
     public String deviceType;
@@ -51,31 +50,29 @@ public class Device {
     /* Required. */
     List<Icon> iconList = new ArrayList<Icon>();
     /* Optional. */
-    List<Service> serviceList;
-    
-    Service mContentDirectoryService = null;
+    List<Service> serviceList = new ArrayList<Service>();
 
     public static Device createInstanceFromXML(String url) {
         final Device device = new Device();
-        
 
         DefaultHandler dh = new DefaultHandler() {
             String currentValue = null;
             Icon currentIcon;
             Service currentService;
-//            String currentService = null;
 
             @Override
             public void characters(char[] ch, int start, int length)
                     throws SAXException {
                 currentValue = new String(ch, start, length);
             }
-            
+
             @Override
             public void startElement(String uri, String localName,
                     String qName, Attributes attributes) throws SAXException {
                 if (Icon.TAG.equals(qName)) {
                     currentIcon = new Icon();
+                } else if (Service.TAG.equals(qName)) {
+                    currentService = new Service();
                 }
             }
 
@@ -120,30 +117,20 @@ public class Device {
                 } else if (Icon.TAG.equals(qName)) {
                     device.iconList.add(currentIcon);
                 }
-                
-//                else if (SERVICE_TYPE.equals(qName)) { /* Only parse ContentDirectory service */
-//                    if (UPNP.SERVICE_CONTENT_DIRECTORY_1.equals(currentValue)) {
-//                        device.mContentDirectoryService = new Service();
-//                        device.mContentDirectoryService.serviceType = UPNP.SERVICE_CONTENT_DIRECTORY_1;
-//                        currentService = UPNP.SERVICE_CONTENT_DIRECTORY_1;
-//                    }
-//                } else if (SERVICE_ID.equals(qName)) {
-//                    if (UPNP.SERVICE_CONTENT_DIRECTORY_1.equals(currentService)) {
-//                        device.mContentDirectoryService.serviceId = currentValue;
-//                    }
-//                } else if (SCPD_URL.equals(qName)) {
-//                    if (UPNP.SERVICE_CONTENT_DIRECTORY_1.equals(currentService)) {
-//                        device.mContentDirectoryService.SCPDURL = currentValue;
-//                    }
-//                } else if (CONTROL_URL.equals(qName)) {
-//                    if (UPNP.SERVICE_CONTENT_DIRECTORY_1.equals(currentService)) {
-//                        device.mContentDirectoryService.controlURL = currentValue;
-//                    }
-//                } else if (EVENTSUB_URL.equals(qName)) {
-//                    if (UPNP.SERVICE_CONTENT_DIRECTORY_1.equals(currentService)) {
-//                        device.mContentDirectoryService.eventSubURL = currentValue;
-//                    }
-//                }
+                /* Parse service-list information */
+                else if (Service.TAG_SERVICE_TYPE.equals(qName)) {
+                    currentService.serviceType = currentValue;
+                } else if (Service.TAG_SERVICE_ID.equals(qName)) {
+                    currentService.serviceId = currentValue;
+                } else if (Service.TAG_SCPD_URL.equals(qName)) {
+                    currentService.SCPDURL = currentValue;
+                } else if (Service.TAG_CONTROL_URL.equals(qName)) {
+                    currentService.controlURL = currentValue;
+                } else if (Service.TAG_EVENTSUB_URL.equals(qName)) {
+                    currentService.eventSubURL = currentValue;
+                } else if (Service.TAG.equals(qName)) {
+                    device.serviceList.add(currentService);
+                }
             }
         };
 
@@ -156,7 +143,7 @@ public class Device {
     public String toString() {
         return friendlyName;
     }
-    
+
     static class Icon {
         static final String TAG = "icon";
         static final String TAG_MIME_TYPE = "mimetype";
@@ -164,7 +151,7 @@ public class Device {
         static final String TAG_HEIGHT = "height";
         static final String TAG_DEPTH = "depth";
         static final String TAG_URL = "url";
-        
+
         /* Required. Icon's MIME type. */
         String mimetype;
         /* Required. Horizontal dimension of icon in pixels. */

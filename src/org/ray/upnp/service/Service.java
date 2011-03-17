@@ -3,28 +3,32 @@ package org.ray.upnp.service;
 import java.util.List;
 
 public class Service {
-    public String serviceType;    /* Required. UPnP service type. */
-    public String serviceId;      /* Required. Service identifier. */
-    public String SCPDURL;        /* Required. Relative URL for service description. */
-    public String controlURL;     /* Required. Relative URL for control. */
-    public String eventSubURL;    /* Relative. Relative URL for eventing. */
-    
+    public static final String TAG = "service";
+    public static final String TAG_SERVICE_TYPE = "serviceType";
+    public static final String TAG_SERVICE_ID = "serviceId";
+    public static final String TAG_SCPD_URL = "SCPDURL";
+    public static final String TAG_CONTROL_URL = "controlURL";
+    public static final String TAG_EVENTSUB_URL = "eventSubURL";
+
+    /* Required. UPnP service type. */
+    public String serviceType;
+    /* Required. Service identifier. */
+    public String serviceId;
+    /* Required. Relative URL for service description. */
+    public String SCPDURL;
+    /* Required. Relative URL for control. */
+    public String controlURL;
+    /* Relative. Relative URL for eventing. */
+    public String eventSubURL;
+
     List<Action> mActionList;
     List<StateVariable> mServiceStateTable;
-    
-    boolean parseSCPD() {
-        if (SCPDURL == null) {
-            return false;
-        }
-        
-        return true;
-    }
-    
-    void parseControl() {
-        
-    }
-    
-    void parseEvent() {
-        
+
+    /*
+     * We don't get SCPD, control and eventSub descriptions at service creation.
+     * So call this method first before you use the service.
+     */
+    public void init() {
+
     }
 }
